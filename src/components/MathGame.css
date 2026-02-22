@@ -156,7 +156,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.next-button.visible {
   animation: fadeIn 0.3s ease-out;
+}
+
+.next-button.hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .next-button:hover {

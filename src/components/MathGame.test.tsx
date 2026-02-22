@@ -79,7 +79,7 @@ describe('MathGame', () => {
     render(<MathGame />)
     
     // Next button should not be visible initially
-    expect(screen.queryByText('➜')).not.toBeInTheDocument()
+    expect(screen.getByText('➜')).not.toBeVisible()
     
     // Get the equation and find correct answer
     const equationElement = screen.getByText('+').parentElement
@@ -95,7 +95,7 @@ describe('MathGame', () => {
       await user.click(correctButton)
       
       // Next button should now be visible
-      expect(screen.getByText('➜')).toBeInTheDocument()
+      expect(screen.getByText('➜')).toBeVisible()
     }
   })
 

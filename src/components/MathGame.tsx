@@ -84,11 +84,12 @@ export const MathGame = () => {
             </div>
           </div>
 
-          {isCorrect && (
-            <button onClick={handleNext} className="next-button">
-              ➜
-            </button>
-          )}
+          <button
+            onClick={handleNext}
+            className={`next-button ${isCorrect ? 'visible' : 'hidden'}`}
+          >
+            ➜
+          </button>
         </div>
       </div>
     </div>
