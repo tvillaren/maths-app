@@ -13,7 +13,7 @@ const GAME_DURATION = 30
 
 const CircleTimer = ({ timeLeft }: { timeLeft: number }) => {
   const radius = 45
-  const progress = timeLeft / GAME_DURATION
+  const progress = (GAME_DURATION - timeLeft) / GAME_DURATION
   const isLastQuarter = timeLeft <= GAME_DURATION * 0.25
   const color = isLastQuarter ? '#ef4444' : '#22c55e'
 
