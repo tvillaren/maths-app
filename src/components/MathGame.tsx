@@ -32,7 +32,7 @@ const CircleTimer = ({ timeLeft }: { timeLeft: number }) => {
   }
 
   return (
-    <svg className="circle-timer" viewBox="0 0 100 100">
+    <svg className={`circle-timer ${isLastQuarter ? 'circle-timer-urgent' : ''}`} viewBox="0 0 100 100">
       <circle className="circle-timer-bg" cx="50" cy="50" r={radius} />
       {progress >= 1 ? (
         <circle cx="50" cy="50" r={radius} fill={color} />
