@@ -11,6 +11,77 @@
   overflow: hidden;
 }
 
+/* --- Timer --- */
+
+.timer-container {
+  align-self: flex-end;
+}
+
+.circle-timer {
+  width: 80px;
+  height: 80px;
+}
+
+.circle-timer-bg {
+  fill: #e5e7eb;
+}
+
+.circle-timer-fill {
+  transition: fill 0.3s ease;
+}
+
+/* --- Start screen --- */
+
+.start-screen {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.start-button {
+  font-size: 3rem;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+  padding: 1rem 3rem;
+  border: 4px solid #22c55e;
+  background-color: #22c55e;
+  color: white;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.start-button:hover {
+  background-color: #16a34a;
+  border-color: #16a34a;
+  transform: scale(1.05);
+}
+
+.start-button:active {
+  transform: scale(0.95);
+}
+
+/* --- Summary screen --- */
+
+.summary-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem;
+}
+
+.summary-score {
+  font-size: 8rem;
+  font-weight: bold;
+  font-family: Arial, sans-serif;
+  color: black;
+}
+
+/* --- Equation --- */
+
 .equation-container {
   flex: 1;
   display: flex;
@@ -79,6 +150,8 @@
     transform: translateX(10px);
   }
 }
+
+/* --- Controls --- */
 
 .controls-container {
   display: flex;
@@ -156,7 +229,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.next-button.visible {
   animation: fadeIn 0.3s ease-out;
+}
+
+.next-button.hidden {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .next-button:hover {
@@ -193,6 +274,20 @@
     height: 70px;
     font-size: 2.2rem;
   }
+
+  .summary-score {
+    font-size: 4rem;
+  }
+
+  .start-button {
+    font-size: 1.8rem;
+    padding: 0.7rem 1.5rem;
+  }
+
+  .circle-timer {
+    width: 50px;
+    height: 50px;
+  }
 }
 
 /* Tablets and small desktops */
@@ -204,6 +299,20 @@
 
   .buttons-layout {
     flex-direction: column;
+  }
+
+  .summary-score {
+    font-size: 5rem;
+  }
+
+  .start-button {
+    font-size: 2rem;
+    padding: 0.8rem 2rem;
+  }
+
+  .circle-timer {
+    width: 60px;
+    height: 60px;
   }
 }
 
@@ -244,6 +353,25 @@
     width: clamp(50px, 10vh, 80px);
     height: clamp(50px, 10vh, 80px);
     font-size: clamp(1.5rem, 4vh, 2.5rem);
+  }
+
+  .timer-container {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+
+  .circle-timer {
+    width: 40px;
+    height: 40px;
+  }
+
+  .summary-score {
+    font-size: clamp(2.5rem, 8vh, 5rem);
+  }
+
+  .start-button {
+    font-size: clamp(1.5rem, 5vh, 2.5rem);
   }
 }
 

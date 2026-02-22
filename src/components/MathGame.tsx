@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import './MathGame.css'
 
 interface Question {
@@ -7,40 +7,137 @@ interface Question {
   answer: number
 }
 
+type GameState = 'start' | 'playing' | 'summary'
+
+const GAME_DURATION = 30
+
+const CircleTimer = ({ timeLeft }: { timeLeft: number }) => {
+  const radius = 45
+  const progress = (GAME_DURATION - timeLeft) / GAME_DURATION
+  const isLastQuarter = timeLeft <= GAME_DURATION * 0.25
+  const color = isLastQuarter ? '#ef4444' : '#22c55e'
+
+  const slicePath = () => {
+    if (progress <= 0) return ''
+    if (progress >= 1) return ''
+
+    const angle = 360 * progress
+    const endAngleRad = ((angle - 90) * Math.PI) / 180
+    const endX = 50 + radius * Math.cos(endAngleRad)
+    const endY = 50 + radius * Math.sin(endAngleRad)
+    const largeArc = angle > 180 ? 1 : 0
+
+    return `M 50 50 L 50 ${50 - radius} A ${radius} ${radius} 0 ${largeArc} 1 ${endX} ${endY} Z`
+  }
+
+  return (
+    <svg className="circle-timer" viewBox="0 0 100 100">
+      <circle className="circle-timer-bg" cx="50" cy="50" r={radius} />
+      {progress >= 1 ? (
+        <circle cx="50" cy="50" r={radius} fill={color} />
+      ) : progress > 0 ? (
+        <path d={slicePath()} fill={color} className="circle-timer-fill" />
+      ) : null}
+    </svg>
+  )
+}
+
 export const MathGame = () => {
+  const [gameState, setGameState] = useState<GameState>('start')
   const [question, setQuestion] = useState<Question>({ x: 0, y: 0, answer: 0 })
   const [userAnswer, setUserAnswer] = useState<number | null>(null)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
+  const [timeLeft, setTimeLeft] = useState(GAME_DURATION)
+  const [score, setScore] = useState({ correct: 0, total: 0 })
+  const startTimeRef = useRef<number>(0)
+  const animFrameRef = useRef<number>(0)
 
-  const generateQuestion = () => {
-    // Generate random numbers where x + y < 10
+  const generateQuestion = useCallback(() => {
     const x = Math.floor(Math.random() * 10)
-    const maxY = Math.min(9, 9 - x) // Ensure x + y < 10
+    const maxY = Math.min(9, 9 - x)
     const y = Math.floor(Math.random() * (maxY + 1))
-    
+
     setQuestion({ x, y, answer: x + y })
     setUserAnswer(null)
     setIsCorrect(null)
+  }, [])
+
+  const startGame = () => {
+    setScore({ correct: 0, total: 0 })
+    setTimeLeft(GAME_DURATION)
+    setGameState('playing')
+    startTimeRef.current = Date.now()
+    generateQuestion()
   }
 
   useEffect(() => {
-    generateQuestion()
-  }, [])
+    if (gameState !== 'playing') return
+
+    const tick = () => {
+      const elapsed = (Date.now() - startTimeRef.current) / 1000
+      const remaining = Math.max(0, GAME_DURATION - elapsed)
+      setTimeLeft(remaining)
+
+      if (remaining <= 0) {
+        setGameState('summary')
+        return
+      }
+      animFrameRef.current = requestAnimationFrame(tick)
+    }
+
+    animFrameRef.current = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(animFrameRef.current)
+  }, [gameState])
 
   const handleNumberClick = (num: number) => {
-    // If already correct, don't allow new input
     if (isCorrect) return
 
     setUserAnswer(num)
-    setIsCorrect(num === question.answer)
+    const correct = num === question.answer
+    setIsCorrect(correct)
+    setScore((prev) => ({
+      correct: prev.correct + (correct ? 1 : 0),
+      total: prev.total + 1,
+    }))
   }
 
   const handleNext = () => {
     generateQuestion()
   }
 
+  if (gameState === 'start') {
+    return (
+      <div className="math-game">
+        <div className="start-screen">
+          <button onClick={startGame} className="start-button">
+            Start
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (gameState === 'summary') {
+    return (
+      <div className="math-game">
+        <div className="summary-screen">
+          <div className="summary-score">
+            {score.correct} / {score.total}
+          </div>
+          <button onClick={startGame} className="start-button">
+            Play again
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="math-game">
+      <div className="timer-container">
+        <CircleTimer timeLeft={timeLeft} />
+      </div>
+
       <div className="equation-container">
         <div className="equation">
           <span className="number">{question.x}</span>
@@ -84,14 +181,14 @@ export const MathGame = () => {
             </div>
           </div>
 
-          {isCorrect && (
-            <button onClick={handleNext} className="next-button">
-              ➜
-            </button>
-          )}
+          <button
+            onClick={handleNext}
+            className={`next-button ${isCorrect ? 'visible' : 'hidden'}`}
+          >
+            ➜
+          </button>
         </div>
       </div>
     </div>
   )
 }
-
