@@ -7,6 +7,19 @@ const startGame = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(startButton)
 }
 
+const getCorrectAnswer = () => {
+  const equationElement = screen.getByText('+').parentElement
+  const numbers = equationElement?.textContent?.match(/\d+/g)
+  if (!numbers || numbers.length < 2) throw new Error('Could not parse equation')
+  return parseInt(numbers[0]) + parseInt(numbers[1])
+}
+
+const answerCorrectly = async (user: ReturnType<typeof userEvent.setup>) => {
+  const correctAnswer = getCorrectAnswer()
+  const correctButton = screen.getByRole('button', { name: correctAnswer.toString() })
+  await user.click(correctButton)
+}
+
 describe('MathGame', () => {
   it('renders a start button initially', () => {
     render(<MathGame />)
@@ -41,21 +54,10 @@ describe('MathGame', () => {
     const { container } = render(<MathGame />)
     await startGame(user)
 
-    const equationElement = screen.getByText('+').parentElement
-    const numbers = equationElement?.textContent?.match(/\d+/g)
+    await answerCorrectly(user)
 
-    if (numbers && numbers.length >= 2) {
-      const x = parseInt(numbers[0])
-      const y = parseInt(numbers[1])
-      const correctAnswer = x + y
-
-      const correctButton = screen.getByRole('button', { name: correctAnswer.toString() })
-      await user.click(correctButton)
-
-      const answerElement = container.querySelector('.answer.correct')
-      expect(answerElement).toBeInTheDocument()
-      expect(answerElement).toHaveTextContent(correctAnswer.toString())
-    }
+    const answerElement = container.querySelector('.answer.correct')
+    expect(answerElement).toBeInTheDocument()
   })
 
   it('displays answer in red when incorrect', async () => {
@@ -63,23 +65,14 @@ describe('MathGame', () => {
     const { container } = render(<MathGame />)
     await startGame(user)
 
-    const equationElement = screen.getByText('+').parentElement
-    const numbers = equationElement?.textContent?.match(/\d+/g)
+    const correctAnswer = getCorrectAnswer()
+    const wrongAnswer = (correctAnswer + 1) % 10
+    const wrongButton = screen.getByRole('button', { name: wrongAnswer.toString() })
+    await user.click(wrongButton)
 
-    if (numbers && numbers.length >= 2) {
-      const x = parseInt(numbers[0])
-      const y = parseInt(numbers[1])
-      const correctAnswer = x + y
-
-      let wrongAnswer = (correctAnswer + 1) % 10
-
-      const wrongButton = screen.getByRole('button', { name: wrongAnswer.toString() })
-      await user.click(wrongButton)
-
-      const answerElement = container.querySelector('.answer.incorrect')
-      expect(answerElement).toBeInTheDocument()
-      expect(answerElement).toHaveTextContent(wrongAnswer.toString())
-    }
+    const answerElement = container.querySelector('.answer.incorrect')
+    expect(answerElement).toBeInTheDocument()
+    expect(answerElement).toHaveTextContent(wrongAnswer.toString())
   })
 
   it('shows next button only when answer is correct', async () => {
@@ -87,23 +80,11 @@ describe('MathGame', () => {
     render(<MathGame />)
     await startGame(user)
 
-    // Next button should not be visible initially
     expect(screen.getByText('➜')).not.toBeVisible()
 
-    const equationElement = screen.getByText('+').parentElement
-    const numbers = equationElement?.textContent?.match(/\d+/g)
+    await answerCorrectly(user)
 
-    if (numbers && numbers.length >= 2) {
-      const x = parseInt(numbers[0])
-      const y = parseInt(numbers[1])
-      const correctAnswer = x + y
-
-      const correctButton = screen.getByRole('button', { name: correctAnswer.toString() })
-      await user.click(correctButton)
-
-      // Next button should now be visible
-      expect(screen.getByText('➜')).toBeVisible()
-    }
+    expect(screen.getByText('➜')).toBeVisible()
   })
 
   it('generates sum less than 10', async () => {
@@ -121,5 +102,69 @@ describe('MathGame', () => {
 
       expect(sum).toBeLessThan(10)
     }
+  })
+
+  it('shows 3 empty stars during gameplay', async () => {
+    const user = userEvent.setup()
+    const { container } = render(<MathGame />)
+    await startGame(user)
+
+    const stars = container.querySelectorAll('.star')
+    expect(stars).toHaveLength(3)
+
+    const emptyStars = container.querySelectorAll('.star-empty')
+    expect(emptyStars).toHaveLength(3)
+  })
+
+  it('earns a star on correct answer', async () => {
+    const user = userEvent.setup()
+    const { container } = render(<MathGame />)
+    await startGame(user)
+
+    await answerCorrectly(user)
+
+    const earnedStars = container.querySelectorAll('.star-earned')
+    expect(earnedStars).toHaveLength(1)
+  })
+
+  it('shows win screen after 3 correct answers', async () => {
+    const user = userEvent.setup()
+    render(<MathGame />)
+    await startGame(user)
+
+    for (let i = 0; i < 3; i++) {
+      await answerCorrectly(user)
+      if (i < 2) {
+        await user.click(screen.getByText('➜'))
+      }
+    }
+
+    expect(screen.getByText(/Level 1 complete!/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Next Level' })).toBeInTheDocument()
+  })
+
+  it('advances to next level on Next Level click', async () => {
+    const user = userEvent.setup()
+    render(<MathGame />)
+    await startGame(user)
+
+    for (let i = 0; i < 3; i++) {
+      await answerCorrectly(user)
+      if (i < 2) {
+        await user.click(screen.getByText('➜'))
+      }
+    }
+
+    await user.click(screen.getByRole('button', { name: 'Next Level' }))
+
+    expect(screen.getByText('Level 2')).toBeInTheDocument()
+  })
+
+  it('displays level label during gameplay', async () => {
+    const user = userEvent.setup()
+    render(<MathGame />)
+    await startGame(user)
+
+    expect(screen.getByText('Level 1')).toBeInTheDocument()
   })
 })

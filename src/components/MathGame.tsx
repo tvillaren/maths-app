@@ -7,9 +7,10 @@ interface Question {
   answer: number
 }
 
-type GameState = 'start' | 'playing' | 'summary'
+type GameState = 'start' | 'playing' | 'win' | 'lose'
 
 const GAME_DURATION = 30
+const STARS_TO_WIN = 3
 
 const CircleTimer = ({ timeLeft }: { timeLeft: number }) => {
   const radius = 45
@@ -42,13 +43,27 @@ const CircleTimer = ({ timeLeft }: { timeLeft: number }) => {
   )
 }
 
+const Stars = ({ earned }: { earned: number }) => (
+  <div className="stars-container">
+    {[0, 1, 2].map((i) => (
+      <span
+        key={i}
+        className={`star ${i < earned ? 'star-earned' : 'star-empty'}`}
+      >
+        ★
+      </span>
+    ))}
+  </div>
+)
+
 export const MathGame = () => {
   const [gameState, setGameState] = useState<GameState>('start')
   const [question, setQuestion] = useState<Question>({ x: 0, y: 0, answer: 0 })
   const [userAnswer, setUserAnswer] = useState<number | null>(null)
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION)
-  const [score, setScore] = useState({ correct: 0, total: 0 })
+  const [stars, setStars] = useState(0)
+  const [level, setLevel] = useState(1)
   const startTimeRef = useRef<number>(0)
   const animFrameRef = useRef<number>(0)
 
@@ -62,12 +77,21 @@ export const MathGame = () => {
     setIsCorrect(null)
   }, [])
 
-  const startGame = () => {
-    setScore({ correct: 0, total: 0 })
+  const startLevel = useCallback(() => {
+    setStars(0)
     setTimeLeft(GAME_DURATION)
     setGameState('playing')
     startTimeRef.current = Date.now()
     generateQuestion()
+  }, [generateQuestion])
+
+  const handleNextLevel = () => {
+    setLevel((prev) => prev + 1)
+    startLevel()
+  }
+
+  const handleRetry = () => {
+    startLevel()
   }
 
   useEffect(() => {
@@ -79,7 +103,7 @@ export const MathGame = () => {
       setTimeLeft(remaining)
 
       if (remaining <= 0) {
-        setGameState('summary')
+        setGameState('lose')
         return
       }
       animFrameRef.current = requestAnimationFrame(tick)
@@ -95,10 +119,14 @@ export const MathGame = () => {
     setUserAnswer(num)
     const correct = num === question.answer
     setIsCorrect(correct)
-    setScore((prev) => ({
-      correct: prev.correct + (correct ? 1 : 0),
-      total: prev.total + 1,
-    }))
+
+    if (correct) {
+      const newStars = stars + 1
+      setStars(newStars)
+      if (newStars >= STARS_TO_WIN) {
+        setGameState('win')
+      }
+    }
   }
 
   const handleNext = () => {
@@ -109,7 +137,7 @@ export const MathGame = () => {
     return (
       <div className="math-game">
         <div className="start-screen">
-          <button onClick={startGame} className="start-button">
+          <button onClick={startLevel} className="start-button">
             Start
           </button>
         </div>
@@ -117,15 +145,28 @@ export const MathGame = () => {
     )
   }
 
-  if (gameState === 'summary') {
+  if (gameState === 'win') {
     return (
       <div className="math-game">
         <div className="summary-screen">
-          <div className="summary-score">
-            {score.correct} / {score.total}
-          </div>
-          <button onClick={startGame} className="start-button">
-            Play again
+          <Stars earned={STARS_TO_WIN} />
+          <div className="result-message win-message">Level {level} complete!</div>
+          <button onClick={handleNextLevel} className="start-button">
+            Next Level
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (gameState === 'lose') {
+    return (
+      <div className="math-game">
+        <div className="summary-screen">
+          <Stars earned={stars} />
+          <div className="result-message lose-message">Time's up!</div>
+          <button onClick={handleRetry} className="start-button retry-button">
+            Retry
           </button>
         </div>
       </div>
@@ -134,7 +175,9 @@ export const MathGame = () => {
 
   return (
     <div className="math-game">
-      <div className="timer-container">
+      <div className="top-bar">
+        <div className="level-label">Level {level}</div>
+        <Stars earned={stars} />
         <CircleTimer timeLeft={timeLeft} />
       </div>
 
@@ -183,7 +226,7 @@ export const MathGame = () => {
 
           <button
             onClick={handleNext}
-            className={`next-button ${isCorrect ? 'visible' : 'hidden'}`}
+            className={`next-button ${isCorrect && stars < STARS_TO_WIN ? 'visible' : 'hidden'}`}
           >
             ➜
           </button>
