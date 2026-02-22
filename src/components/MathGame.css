@@ -141,15 +141,6 @@
   pointer-events: none;
 }
 
-.number-button:disabled:hover,
-.number-button:disabled:focus,
-.number-button:disabled:focus-visible {
-  outline: none;
-  border: 3px solid black;
-  background-color: white;
-  transform: none;
-}
-
 .next-button {
   position: absolute;
   right: 0;
