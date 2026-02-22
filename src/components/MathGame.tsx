@@ -13,28 +13,31 @@ const GAME_DURATION = 30
 
 const CircleTimer = ({ timeLeft }: { timeLeft: number }) => {
   const radius = 45
-  const circumference = 2 * Math.PI * radius
-  const progress = (GAME_DURATION - timeLeft) / GAME_DURATION
-  const dashoffset = circumference * (1 - progress)
+  const progress = timeLeft / GAME_DURATION
   const isLastQuarter = timeLeft <= GAME_DURATION * 0.25
+  const color = isLastQuarter ? '#ef4444' : '#22c55e'
+
+  const slicePath = () => {
+    if (progress <= 0) return ''
+    if (progress >= 1) return ''
+
+    const angle = 360 * progress
+    const endAngleRad = ((angle - 90) * Math.PI) / 180
+    const endX = 50 + radius * Math.cos(endAngleRad)
+    const endY = 50 + radius * Math.sin(endAngleRad)
+    const largeArc = angle > 180 ? 1 : 0
+
+    return `M 50 50 L 50 ${50 - radius} A ${radius} ${radius} 0 ${largeArc} 1 ${endX} ${endY} Z`
+  }
 
   return (
     <svg className="circle-timer" viewBox="0 0 100 100">
-      <circle
-        className="circle-timer-bg"
-        cx="50"
-        cy="50"
-        r={radius}
-      />
-      <circle
-        className="circle-timer-fill"
-        cx="50"
-        cy="50"
-        r={radius}
-        strokeDasharray={circumference}
-        strokeDashoffset={dashoffset}
-        stroke={isLastQuarter ? '#ef4444' : '#22c55e'}
-      />
+      <circle className="circle-timer-bg" cx="50" cy="50" r={radius} />
+      {progress >= 1 ? (
+        <circle cx="50" cy="50" r={radius} fill={color} />
+      ) : progress > 0 ? (
+        <path d={slicePath()} fill={color} className="circle-timer-fill" />
+      ) : null}
     </svg>
   )
 }

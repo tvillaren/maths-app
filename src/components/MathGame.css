@@ -20,20 +20,14 @@
 .circle-timer {
   width: 80px;
   height: 80px;
-  transform: rotate(-90deg);
 }
 
 .circle-timer-bg {
-  fill: none;
-  stroke: #e5e7eb;
-  stroke-width: 8;
+  fill: #e5e7eb;
 }
 
 .circle-timer-fill {
-  fill: none;
-  stroke-width: 8;
-  stroke-linecap: round;
-  transition: stroke 0.3s ease;
+  transition: fill 0.3s ease;
 }
 
 /* --- Start screen --- */
